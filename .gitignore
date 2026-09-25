@@ -1,3 +1,9 @@
 node_modules/
 .env
 package-lock.json
+API_STATUS_CODES.md
+IMPLEMENTATION_SUMMARY.md
+postman-collection.json
+postman-environment.json
+postman.js
+QUICK_REFERENCE.md

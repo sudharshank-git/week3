@@ -138,7 +138,7 @@ export const replaceProduct = async (req,res)=>{
         ]
         const newData = await Model.replaceProductData(details)
         if(newData.length === 0) return res.status(404).json({ message: "Product not found" });
-        return res.status(201).json({ message: "Replaced product Data", product: newData });
+        return res.status(200).json({ message: "Product replaced successfully", product: newData });
     }catch (err) {
         return serverError(res, err);
     }
@@ -168,7 +168,7 @@ export const updateProduct = async (req,res)=>{
         ]
         const newData = await Model.updateProductData(details)
         if(newData.length === 0) return res.status(404).json({ message: "Product not found" });
-        return res.status(201).json({ message: "Replaced product Data", product: newData });
+        return res.status(200).json({ message: "Product updated successfully", product: newData });
     }catch (err) {
         return serverError(res, err);
     }
@@ -182,7 +182,7 @@ export const deleteProduct = async(req,res)=>{
         if(deletedRow.length === 0){
             return res.status(404).json({ message: "Product not found" });
         }
-        return res.status(201).json({ message: "Deleted product Data", product: deletedRow });
+        return res.status(204).send();
     }catch(err){
         return serverError(res, err);
     }
@@ -194,7 +194,7 @@ export const deleteRecord = async(req,res)=>{
         const Records = await Model.deleteAllRecord()
         const getProducts = await Model.getAll()
         if(getProducts.length !== 0) return res.status(400).json({message:"The data is not deleted"})
-        return res.status(201).json({ message: "Deleted Product Record", product: Records });
+        return res.status(204).send();
     }catch(err){
         return serverError(res, err);
     }
