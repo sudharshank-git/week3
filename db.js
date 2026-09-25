@@ -11,7 +11,7 @@ export const db = new pg.Pool({
 
 
 db.on("error", (err) => {
-    console.error("Unexpected DB pool error:", err.message);
+    res.status(503).json({ Message :"Service Unavailable", Error: err.message});
 });
 
 export const schema = process.env.DB_SCHEMA;

@@ -4,15 +4,9 @@ import * as Schema from "../schemas/productSchema.js"
 
 
 
-const serverError = (res, err) => {
-    console.error(err);
-    return res.status(500).json({ message: "Internal server error" });
-};
-
-
-
 export const getProducts = async (req, res) => {
     try {
+        console.log(req.headers)
         const products = await Model.getAll();
         return res.status(200).json({
             message: "Product data fetched",
@@ -20,18 +14,16 @@ export const getProducts = async (req, res) => {
             products: products,
         });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Internal server error" });
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 };
 
 export const getProductsById = async (req, res) => {
     const { error, value } = Schema.idSchema.validate(req.params);
-        if (error) {
-        return res
-            .status(400)
-            .json({ message: "Invalid product ID", error: error.message });
-        }
+    if (error) return res.status(422).json({ message: error.details });
     try {
         const products = await Model.getProduct(value.id);
         return res.status(200).json({
@@ -39,8 +31,10 @@ export const getProductsById = async (req, res) => {
             products: products,
         });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Internal server error" });
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 };
 
@@ -48,11 +42,7 @@ export const getProductsById = async (req, res) => {
 
 export const filterProducts = async (req, res) => {
     const { error, value } = Schema.filterSchema.validate(req.query);
-        if (error) {
-        return res
-            .status(400)
-            .json({ message: "Invalid product query", error: error.message });
-        }
+    if (error) return res.status(422).json({ message: error.details });
     const condition = []
     const values =[]
     const add = async(cat,v)=>{
@@ -90,15 +80,17 @@ export const filterProducts = async (req, res) => {
             products: products,
         });
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Internal server error" });
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 };
 
 
 export const addProduct = async (req,res)=>{
     const { error, value } = Schema.productSchema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.message });
+    if (error) return res.status(422).json({ message: error.details });
     try {
         const details = [
             value.name,
@@ -113,7 +105,10 @@ export const addProduct = async (req,res)=>{
         if(newProduct.length === 0) return res.status(404).json({ message: "Product not found" });
         return res.status(201).json({ message: "New product added", product: newProduct });
     }catch (err) {
-        return serverError(res, err);
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 }
 
@@ -121,10 +116,10 @@ export const addProduct = async (req,res)=>{
 export const replaceProduct = async (req,res)=>{
     const idVal = Schema.idSchema.validate(req.params)
     if (idVal.error) {
-        return res.status(400).json({ message: idVal.error.message });
+        return res.status(422).json({ message: error.details });
     }
     const { error, value } = Schema.productSchema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.message });
+    if (error) return res.status(422).json({ message: error.details });
     try {
         const details = [
             value.name,
@@ -140,7 +135,10 @@ export const replaceProduct = async (req,res)=>{
         if(newData.length === 0) return res.status(404).json({ message: "Product not found" });
         return res.status(200).json({ message: "Product replaced successfully", product: newData });
     }catch (err) {
-        return serverError(res, err);
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 }
 
@@ -149,10 +147,10 @@ export const replaceProduct = async (req,res)=>{
 export const updateProduct = async (req,res)=>{
     const idVal = Schema.idSchema.validate(req.params)
     if (idVal.error) {
-        return res.status(400).json({ message: idVal.error.message });
+        return res.status(422).json({ message: error.details });
     }
     const { error, value } = Schema.patchSchema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.message });
+    if (error) return res.status(422).json({ message: error.details });
     try {
 
         const row = await Model.getProduct(idVal.value.id)
@@ -170,21 +168,27 @@ export const updateProduct = async (req,res)=>{
         if(newData.length === 0) return res.status(404).json({ message: "Product not found" });
         return res.status(200).json({ message: "Product updated successfully", product: newData });
     }catch (err) {
-        return serverError(res, err);
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 }
 
 export const deleteProduct = async(req,res)=>{
     const {error,value} = Schema.idSchema.validate(req.params)
-    if(error) return res.status(400).json({ message: error.message });
+    if (error) return res.status(422).json({ message: error.details });
     try{
         const deletedRow = await Model.deleteProductData(value.id)
         if(deletedRow.length === 0){
             return res.status(404).json({ message: "Product not found" });
         }
-        return res.status(204).send();
+        return res.status(200).json({"Deleted Product":deletedRow});
     }catch(err){
-        return serverError(res, err);
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 }
 
@@ -196,6 +200,9 @@ export const deleteRecord = async(req,res)=>{
         if(getProducts.length !== 0) return res.status(400).json({message:"The data is not deleted"})
         return res.status(204).send();
     }catch(err){
-        return serverError(res, err);
+        console.log(err);
+        const error = new Error(err.message);
+        error.statusCode = 500;
+        return next(error);
     }
 }
